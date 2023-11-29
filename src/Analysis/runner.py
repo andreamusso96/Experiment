@@ -1,7 +1,4 @@
-from typing import List
-
-import networkx as nx
-
+import os
 import mab_experiment as exp
 import pandas as pd
 import itertools
@@ -15,6 +12,8 @@ from config import EXPERIMENT_RESULT_BASE_FOLDER
 def experiment_1():
     # This experiment tests the hypothesis that centralized networks are worst at adapting to changes in a COMPLEX MAB problem than decentralized networks.
     folder = f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_1'
+    os.makedirs(folder) if not os.path.isdir(folder) else None
+
     n_ag = 50
     n_steps = 300
     agent_type = exp.AgentType.VOTER_MODEL
