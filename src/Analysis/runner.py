@@ -9,13 +9,12 @@ from tqdm import tqdm
 
 from mab import get_spiking_non_stationary_multi_armed_bandit, get_inverting_non_stationary_multi_armed_bandit
 from network import get_power_law_network, get_watts_strogatz_network, get_relaxed_caveman_network, get_connected_caveman_network
-
-experiment_folder = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/ExperimentResults'
+from config import EXPERIMENT_RESULT_BASE_FOLDER
 
 
 def experiment_1():
     # This experiment tests the hypothesis that centralized networks are worst at adapting to changes in a COMPLEX MAB problem than decentralized networks.
-    folder = f'{experiment_folder}/experiment_1'
+    folder = f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_1'
     n_ag = 50
     n_steps = 300
     agent_type = exp.AgentType.VOTER_MODEL

@@ -13,8 +13,8 @@ is_cluster = check_if_cluster()
 
 
 if is_cluster:
-    EXPERIMENT_RESULT_BASE_FOLDER = '/home/andrea/PhD/Experiment/Data/ExperimentResults'
-    GRAPH_BASE_FOLDER = '/home/andrea/PhD/Experiment/Data/Graphs'
+    EXPERIMENT_RESULT_BASE_FOLDER = '/cluster/work/gess/coss/users/anmusso/Experiment/ExperimentResults'
+    GRAPH_BASE_FOLDER = '/cluster/work/gess/coss/users/anmusso/Experiment/Graphs'
 else:
     EXPERIMENT_RESULT_BASE_FOLDER = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/ExperimentResults'
     GRAPH_BASE_FOLDER = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/Graphs'

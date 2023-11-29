@@ -3,9 +3,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from config import EXPERIMENT_RESULT_BASE_FOLDER
 
 statistics_folder = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/Statistics'
-experiment_folder = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/ExperimentResults'
 
 
 def plot_softmax_prob_against_total_regret_after_step(step: int) -> px.scatter:
@@ -13,7 +13,7 @@ def plot_softmax_prob_against_total_regret_after_step(step: int) -> px.scatter:
     average_per_round_regret.columns = [int(c.split('_')[-1]) for c in average_per_round_regret.columns]
     total_per_round_regret = average_per_round_regret.loc[step:].sum(axis=0).to_frame(name='total_regret')
 
-    experiment_specs = pd.read_csv(f'{experiment_folder}/experiment_specs.csv')
+    experiment_specs = pd.read_csv(f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_specs.csv')
     experiment_specs = experiment_specs.set_index('eid')
     softmax_prob_network_and_regret = pd.concat([experiment_specs[['softmax_prob', 'network']], total_per_round_regret], axis=1)
 
@@ -36,7 +36,7 @@ def plot_softmax_prob_against_total_regret_after_step(step: int) -> px.scatter:
 def plot_heatmap_successful_adaptations_by_network_type(problem_type: str) -> px.imshow:
     successful_adaptations = pd.read_csv(f'{statistics_folder}/successful_adapts_{problem_type}.csv')
     successful_adaptations = successful_adaptations.set_index('eid')
-    experiment_specs = pd.read_csv(f'{experiment_folder}/experiment_1/experiment_info.csv')
+    experiment_specs = pd.read_csv(f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_1/experiment_info.csv')
     experiment_specs = experiment_specs.set_index('eid')
     experiment_specs_and_successful_adaptations = pd.concat([experiment_specs[['softmax_prob', 'memory_decay', 'network']], successful_adaptations], axis=1).dropna()
     networks = experiment_specs['network'].unique()
@@ -67,6 +67,7 @@ def plot_heatmap_successful_adaptations_by_network_type(problem_type: str) -> px
     fig.update_layout(title=f'Share of successful adaptations by network type ({problem_type})', font=dict(size=20, color='black'), template='plotly_white')
     fig.update_yaxes(title_text='Memory decay')
     return fig
+
 
 if __name__ == '__main__':
     plot_heatmap_successful_adaptations_by_network_type(problem_type='spiked').show()

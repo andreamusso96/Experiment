@@ -1,6 +1,6 @@
 import networkx as nx
 import pandas as pd
-from config import is_cluster
+from config import is_cluster, GRAPH_BASE_FOLDER
 
 if not is_cluster:
     import graph_tool.all as gt
@@ -21,7 +21,7 @@ def get_power_law_network(n_nodes: int, min_degree: int, exponent: float):
         g.ep['weight'] = g.new_edge_property('double', val=1)
         g = nu.converter.gt_to_nx(g)
     else:
-        g = nx.from_pandas_adjacency(pd.read_csv(f'../data/networks/power_law_{min_degree}_{exponent}.csv', index_col=0))
+        g = nx.from_pandas_adjacency(pd.read_csv(f'{GRAPH_BASE_FOLDER}/pl_{min_degree}_{exponent}.csv', index_col=0))
     return Network(network=g, name=f'pl_{min_degree}_{exponent}')
 
 
