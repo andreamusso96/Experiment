@@ -23,7 +23,7 @@ def get_power_law_network(n_nodes: int, min_degree: int, exponent: float):
     else:
         adjacency = pd.read_csv(f'{GRAPH_BASE_FOLDER}/pl_{min_degree}_{exponent}.csv', index_col=0)
         adjacency.columns = adjacency.columns.astype(int)
-        g = nx.from_pandas_adjacency(adjacency, index_col=0)
+        g = nx.from_pandas_adjacency(adjacency)
 
     return Network(network=g, name=f'pl_{min_degree}_{exponent}')
 
