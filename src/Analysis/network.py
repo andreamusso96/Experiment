@@ -21,7 +21,10 @@ def get_power_law_network(n_nodes: int, min_degree: int, exponent: float):
         g.ep['weight'] = g.new_edge_property('double', val=1)
         g = nu.converter.gt_to_nx(g)
     else:
-        g = nx.from_pandas_adjacency(pd.read_csv(f'{GRAPH_BASE_FOLDER}/pl_{min_degree}_{exponent}.csv', index_col=0))
+        adjacency = pd.read_csv(f'{GRAPH_BASE_FOLDER}/pl_{min_degree}_{exponent}.csv', index_col=0)
+        adjacency.columns = adjacency.columns.astype(int)
+        g = nx.from_pandas_adjacency(adjacency, index_col=0)
+
     return Network(network=g, name=f'pl_{min_degree}_{exponent}')
 
 
