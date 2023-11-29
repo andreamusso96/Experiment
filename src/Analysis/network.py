@@ -47,6 +47,11 @@ def get_connected_caveman_network(n_nodes: int, k: int):
     return Network(network=g, name=f'cc_{k}')
 
 
+def get_complete_network(n_nodes: int):
+    g = nx.complete_graph(n_nodes)
+    return Network(network=g, name=f'complete_{n_nodes}')
+
+
 def save_adjacency_network(network: nx.Graph, file_path: str):
     nx.to_pandas_adjacency(network).to_csv(file_path)
 
