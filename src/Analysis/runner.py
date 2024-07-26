@@ -41,9 +41,9 @@ def experiment_1():
     # We look at a variety of softmax probabilities more for robustness than anything else
     softmax_probs = [1/(100*n_ag), 1 / (10 * n_ag), 1 / n_ag, 10 / n_ag, 1]
     memory_decay = [0.01, 0.1, 0.5, 0.9, 0.99]
-    n_samples = 100
+    n_samples = 2
 
-    experiment_params = itertools.product(softmax_probs, memory_decay, networks, problems, range(n_samples))
+    experiment_params = list(itertools.product(softmax_probs, memory_decay, networks, problems, range(n_samples)))
     experiment_info = []
     for eid, params in tqdm(list(enumerate(experiment_params))):
         softmax_prob, mem_decay, net, problem, k = params
@@ -89,7 +89,7 @@ def experiment_2():
     memory_decay = [0.01, 0.1, 0.5, 0.9, 0.99]
     n_samples = 100
 
-    experiment_params = itertools.product(softmax_probs, memory_decay, networks, problems, range(n_samples))
+    experiment_params = list(itertools.product(softmax_probs, memory_decay, networks, problems, range(n_samples)))[:1000]
 
     experiment_info = []
     for eid, params in tqdm(list(enumerate(experiment_params))):
@@ -111,8 +111,10 @@ def experiment_2():
 
 
 if __name__ == '__main__':
+    experiment_1()
+    """"
     n_exp = sys.argv[1]
     if n_exp == '1':
         experiment_1()
     elif n_exp == '2':
-        experiment_2()
+        experiment_2()"""

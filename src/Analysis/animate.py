@@ -7,23 +7,22 @@ import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, callback, State
 import dash_bootstrap_components as dbc
 
-from experiment import Experiment
+from experiment import Experiment, ExperimentCollection
 from config import EXPERIMENT_RESULT_BASE_FOLDER
 
 external_stylesheets = [dbc.themes.CYBORG]
-experiment_folder = f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_1'
-experiment_info = pd.read_csv(f'{experiment_folder}/experiment_info.csv')
-n_experiments = len(experiment_info)
-n_steps_experiment = experiment_info['n_steps'].unique()[0]
+experiment_collection = ExperimentCollection.load(folder_path=EXPERIMENT_RESULT_BASE_FOLDER, cid=1)
+n_steps_experiment = experiment_collection.info['n_steps'].unique()[0]
 slider_step = 10
 ms_interval_simulation = 1000 / slider_step
 
 
 def get_dropdown_options() -> Dict[str, List[Dict[str, Any]]]:
-    options = {'network': [{'label': network, 'value': network} for network in experiment_info['network'].unique()],
-               'problem': [{'label': problem, 'value': problem} for problem in experiment_info['problem'].unique()],
-               'softmax_prob': [{'label': softmax_prob, 'value': softmax_prob} for softmax_prob in experiment_info['softmax_prob'].unique()],
-               'memory_decay': [{'label': memory_decay, 'value': memory_decay} for memory_decay in experiment_info['memory_decay'].unique()]}
+    options = {'network': [{'label': network, 'value': network} for network in experiment_collection.info['network'].unique()],
+               'problem': [{'label': problem, 'value': problem} for problem in experiment_collection.info['problem'].unique()],
+               'softmax_prob': [{'label': softmax_prob, 'value': softmax_prob} for softmax_prob in experiment_collection.info['softmax_prob'].unique()],
+               'memory_decay': [{'label': memory_decay, 'value': memory_decay} for memory_decay in experiment_collection.info['memory_decay'].unique()],
+               'n_bandits': [{'label': n_bandits, 'value': n_bandits} for n_bandits in experiment_collection.info['n_bandits'].unique()]}
     return options
 
 
@@ -36,14 +35,15 @@ app.layout = dbc.Container([
     html.Hr(),
     dcc.Interval(id="animate", interval=ms_interval_simulation, n_intervals=0, disabled=True),
     dbc.Row([
-        dbc.Col(dbc.Button("Play", id="play", className="mr-1"), width=1),
-        dbc.Col(dcc.Dropdown(id='dropdown_problem', options=dropdown_options['problem'], value=dropdown_options['problem'][0]['value']), width=1),
-        dbc.Col(dcc.Dropdown(id='dropdown_softmax_prob', options=dropdown_options['softmax_prob'], value=dropdown_options['softmax_prob'][0]['value']), width=1),
-        dbc.Col(dcc.Dropdown(id='dropdown_memory_decay', options=dropdown_options['memory_decay'], value=dropdown_options['memory_decay'][0]['value']), width=1),
-        dbc.Col(dcc.Input(id="input_sample", type="number", value=0, min=0, max=99, step=1), width=1),
+        dbc.Col([dbc.Button("Play", id="play", className="mr-1")], width=1),
+        dbc.Col([html.Label('Problem'), dcc.Dropdown(id='dropdown_problem', options=dropdown_options['problem'], value=dropdown_options['problem'][0]['value'])], width=2),
+        dbc.Col([html.Label('Softmax'), dcc.Dropdown(id='dropdown_softmax_prob', options=dropdown_options['softmax_prob'], value=dropdown_options['softmax_prob'][0]['value'])], width=1),
+        dbc.Col([html.Label('Memory'), dcc.Dropdown(id='dropdown_memory_decay', options=dropdown_options['memory_decay'], value=dropdown_options['memory_decay'][0]['value'])], width=1),
+        dbc.Col([html.Label('N Bandits'), dcc.Dropdown(id='dropdown_bandits', options=dropdown_options['n_bandits'], value=dropdown_options['n_bandits'][0]['value'])], width=1),
+        dbc.Col([html.Label('Sample'), dcc.Input(id="input_sample", type="number", value=0, min=0, max=99, step=1)], width=1),
 
-        dbc.Col(dcc.Dropdown(id='dropdown_network_1', options=dropdown_options['network'], value=dropdown_options['network'][0]['value']), width=2),
-        dbc.Col(dcc.Dropdown(id='dropdown_network_2', options=dropdown_options['network'], value=dropdown_options['network'][1]['value']), width=2)]),
+        dbc.Col([html.Label('Network Left'), dcc.Dropdown(id='dropdown_network_1', options=dropdown_options['network'], value=dropdown_options['network'][0]['value'])], width=2),
+        dbc.Col([html.Label('Network Right'), dcc.Dropdown(id='dropdown_network_2', options=dropdown_options['network'], value=dropdown_options['network'][1]['value'])], width=2)]),
     dbc.Row([
         dbc.Col(dcc.Graph(id='network_fig_1'), width=6),
         dbc.Col(dcc.Graph(id='network_fig_2'), width=6)]),
@@ -56,33 +56,37 @@ app.layout = dbc.Container([
     ])])
 
 
-@callback(
-    Output('network_fig_1', 'figure'),
-    Output('network_fig_2', 'figure'),
-    Output('bandit_payoff_fig', 'figure'),
-    Output('avg_return_fig', 'figure'),
-    Input('dropdown_problem', 'value'),
-    Input('dropdown_softmax_prob', 'value'),
-    Input('dropdown_memory_decay', 'value'),
-    Input('input_sample', 'value'),
-    Input('dropdown_network_1', 'value'),
-    Input('dropdown_network_2', 'value'),
-    Input('step_slider', 'value'))
-def change_figure_on_slider_change(problem: str, softmax_prob: float, memory_decay: float, sample: int, network_1: str, network_2: str, step: int) -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure]:
-    eid1 = get_eid(network=network_1, problem=problem, softmax_prob=softmax_prob, memory_decay=memory_decay, sample=sample)
-    eid2 = get_eid(network=network_2, problem=problem, softmax_prob=softmax_prob, memory_decay=memory_decay, sample=sample)
-    experiment_1 = Experiment.load(folder_path=experiment_folder, eid=eid1)
-    experiment_2 = Experiment.load(folder_path=experiment_folder, eid=eid2)
-    fig_network_1 = make_network_figure(experiment=experiment_1, step=step)
-    fig_network_2 = make_network_figure(experiment=experiment_2, step=step)
-    bandit_payoff = make_bandit_payoff_figure(experiment=experiment_1, step=step)
-    fig_avg_return = make_average_return_figure(experiment=experiment_1, step=step, line_color='blue')
-    fig_avg_return = make_average_return_figure(experiment=experiment_2, step=step, fig=fig_avg_return, line_color='red')
-    return fig_network_1, fig_network_2, bandit_payoff, fig_avg_return
+    @callback(
+        Output('network_fig_1', 'figure'),
+        Output('network_fig_2', 'figure'),
+        Output('bandit_payoff_fig', 'figure'),
+        Output('avg_return_fig', 'figure'),
+        Input('dropdown_problem', 'value'),
+        Input('dropdown_softmax_prob', 'value'),
+        Input('dropdown_memory_decay', 'value'),
+        Input('dropdown_bandits', 'value'),
+        Input('input_sample', 'value'),
+        Input('dropdown_network_1', 'value'),
+        Input('dropdown_network_2', 'value'),
+        Input('step_slider', 'value'))
+    def change_figure_on_slider_change(problem: str, softmax_prob: float, memory_decay: float, n_bandits: int, sample: int, network_1: str, network_2: str, step: int) -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure]:
+        eid1 = get_eid(network=network_1, problem=problem, softmax_prob=softmax_prob, memory_decay=memory_decay, sample=sample, n_bandits=n_bandits)
+        eid2 = get_eid(network=network_2, problem=problem, softmax_prob=softmax_prob, memory_decay=memory_decay, sample=sample, n_bandits=n_bandits)
+        experiment_1 = experiment_collection.get_experiment(eid=eid1)
+        experiment_2 = experiment_collection.get_experiment(eid=eid2)
+        fig_network_1 = make_network_figure(experiment=experiment_1, step=step)
+        fig_network_2 = make_network_figure(experiment=experiment_2, step=step)
+        bandit_payoff = make_bandit_payoff_figure(experiment=experiment_1, step=step)
+        fig_avg_return = make_average_return_figure(experiment=experiment_1, step=step, line_color='blue')
+        fig_avg_return = make_average_return_figure(experiment=experiment_2, step=step, fig=fig_avg_return, line_color='red')
+        print(eid1, eid2)
+        return fig_network_1, fig_network_2, bandit_payoff, fig_avg_return
 
 
-def get_eid(network: str, problem: str, softmax_prob: float, memory_decay: float, sample: int) -> int:
-    eid = experiment_info.loc[(experiment_info['network'] == network) & (experiment_info['softmax_prob'] == softmax_prob) & (experiment_info['memory_decay'] == memory_decay) & (experiment_info['sample'] == sample) & (experiment_info['problem'] == problem)]['eid'].values[0]
+def get_eid(network: str, problem: str, softmax_prob: float, memory_decay: float, n_bandits: int, sample: int) -> int:
+    mask = ((experiment_collection.info['network'] == network) & (experiment_collection.info['softmax_prob'] == softmax_prob) & (experiment_collection.info['memory_decay'] == memory_decay) & (experiment_collection.info['sample'] == sample) & (experiment_collection.info['problem'] == problem)
+            & (experiment_collection.info['n_bandits'] == n_bandits))
+    eid = experiment_collection.info.loc[mask].index[0]
     return eid
 
 

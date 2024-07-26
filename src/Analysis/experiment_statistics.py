@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from experiment import Experiment
+from experiment import Experiment, ExperimentCollection
 
 
 def average_per_step_regret(experiment: Experiment) -> pd.DataFrame:
@@ -41,13 +41,19 @@ def successful_adaptation(experiment: Experiment, threshold: float) -> int:
 
 
 if __name__ == '__main__':
-    experiment_folder_path = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/ExperimentResults/experiment_1'
-    experiments = pd.read_csv(f'{experiment_folder_path}/experiment_info.csv')
-    experiments = experiments.loc[experiments['problem'] == 'inverting']['eid'].values
-    successful_adapts = []
-    for eid in tqdm(experiments):
-        exp = Experiment.load(folder_path=experiment_folder_path, eid=eid)
-        successful_adapts.append({'eid': eid, 'successful_adaptation': successful_adaptation(experiment=exp, threshold=1.1)})
+    experiment_folder_path = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/ExperimentResults'
+    ec = ExperimentCollection.load(folder_path=experiment_folder_path, cid=1)
+    problem_types =['inverting', 'spiking']
+    thresholds = [1.1, 3]
 
-    successful_adapts = pd.DataFrame(successful_adapts)
-    successful_adapts.to_csv('/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/Statistics/successful_adapts_inverting.csv', index=False)
+    for i in range(len(problem_types)):
+        problem_type = problem_types[i]
+        threshold = thresholds[i]
+        eids = ec.info.loc[ec.info['problem'] == problem_type].index
+        experiments = ec.get_experiments(eid=eids)
+        successful_adapts = []
+        for exp in tqdm(experiments, total=len(eids)):
+            successful_adapts.append({'eid': exp.eid, 'successful_adaptation': successful_adaptation(experiment=exp, threshold=threshold)})
+
+        successful_adapts = pd.DataFrame(successful_adapts)
+        successful_adapts.to_csv(f'/Users/andrea/Desktop/PhD/Projects/Current/Experiment/Data/Statistics/successful_adapts_{problem_type}.csv', index=False)

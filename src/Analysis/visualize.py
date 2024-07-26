@@ -1,4 +1,5 @@
 import pandas as pd
+import itertools
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -33,11 +34,12 @@ def plot_softmax_prob_against_total_regret_after_step(step: int) -> px.scatter:
     return fig
 
 
-def plot_heatmap_successful_adaptations_by_network_type(problem_type: str) -> px.imshow:
+def plot_heatmap_successful_adaptations_by_network_type(problem_type: str, n_bandits: int) -> px.imshow:
     successful_adaptations = pd.read_csv(f'{statistics_folder}/successful_adapts_{problem_type}.csv')
     successful_adaptations = successful_adaptations.set_index('eid')
     experiment_specs = pd.read_csv(f'{EXPERIMENT_RESULT_BASE_FOLDER}/experiment_1/experiment_info.csv')
     experiment_specs = experiment_specs.set_index('eid')
+    experiment_specs = experiment_specs.loc[(experiment_specs['problem'] == problem_type) & (experiment_specs['n_bandits'] == n_bandits)].copy()
     experiment_specs_and_successful_adaptations = pd.concat([experiment_specs[['softmax_prob', 'memory_decay', 'network']], successful_adaptations], axis=1).dropna()
     networks = experiment_specs['network'].unique()
     networks = [n for n in networks if n != 'cc_5']
@@ -64,10 +66,14 @@ def plot_heatmap_successful_adaptations_by_network_type(problem_type: str) -> px
         if col == 1:
             fig.update_yaxes(title_text='Memory decay', row=row, col=col)
 
-    fig.update_layout(title=f'Share of successful adaptations by network type ({problem_type})', font=dict(size=20, color='black'), template='plotly_white')
+    fig.update_layout(title=f'Share of successful adaptations by network type ({problem_type}, {n_bandits})', font=dict(size=20, color='black'), template='plotly_white')
     fig.update_yaxes(title_text='Memory decay')
     return fig
 
 
 if __name__ == '__main__':
-    plot_heatmap_successful_adaptations_by_network_type(problem_type='spiked').show()
+    problem_types = ['inverting', 'spiking']
+    n_bandits = [5, 10, 20]
+    specs = itertools.product(problem_types, n_bandits)
+    for problem_type, n_band in specs:
+        plot_heatmap_successful_adaptations_by_network_type(problem_type=problem_type, n_bandits=n_band).show()

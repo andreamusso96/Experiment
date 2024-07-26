@@ -1,3 +1,5 @@
+from typing import Iterator
+from typing import List
 import pandas as pd
 import networkx as nx
 
@@ -15,7 +17,7 @@ class Experiment:
     def load(cls, folder_path: str, eid: int):
         payoff_history = pd.read_csv(f'{folder_path}/experiment_{eid}_payoff_history.csv', index_col=0)
         action_history = pd.read_csv(f'{folder_path}/experiment_{eid}_action_history.csv', index_col=0)
-        ns_mab_specs = pd.read_csv(f'{folder_path}/experiment_{eid}_variable_multi_armed_bandit.csv', index_col=0)
+        ns_mab_specs = pd.read_csv(f'{folder_path}/experiment_{eid}_non_stationary_multi_armed_bandit.csv', index_col=0)
         network_adjacency = pd.read_csv(f'{folder_path}/experiment_{eid}_network_adj.csv', index_col=0)
         network_adjacency.columns = network_adjacency.columns.astype(int)
         network = nx.from_pandas_adjacency(network_adjacency)
@@ -27,6 +29,29 @@ class Experiment:
 
     def get_number_of_agents(self):
         return self.payoff_history.shape[1]
+
+
+class ExperimentCollection:
+    def __init__(self, cid: int, experiment_info: pd.DataFrame, folder_path: str):
+        self.cid = cid
+        self.info = experiment_info
+        self.folder_path = f'{folder_path}/experiment_{cid}'
+
+    @classmethod
+    def load(cls, folder_path: str, cid: int) -> 'ExperimentCollection':
+        experiment_info = pd.read_csv(f'{folder_path}/experiment_{cid}/experiment_info.csv', index_col=0)
+        return ExperimentCollection(cid=cid, experiment_info=experiment_info, folder_path=folder_path)
+
+    def n_experiment(self) -> int:
+        return self.info.shape[0]
+
+    def get_experiment(self, eid: int) -> Experiment:
+        return Experiment.load(folder_path=self.folder_path, eid=eid)
+
+    def get_experiments(self, eid: List[int] = None) -> Iterator[Experiment]:
+        eid_ = eid if eid is not None else self.info['eid'].values
+        for eid in eid_:
+            yield self.get_experiment(eid=eid)
 
 
 if __name__ == '__main__':
