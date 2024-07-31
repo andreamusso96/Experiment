@@ -2,8 +2,8 @@ import os
 
 
 def launch_jobs(cluster):
-    dims = [8, 10, 12]
-    vision = [1, 2]
+    dims = [12]
+    vision = [2]
 
     if cluster:
         path_save = '/cluster/work/coss/anmusso/experiment/rewiring_dim_vision/experiment_{dims}_{vision}.csv'
