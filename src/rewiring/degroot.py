@@ -1,9 +1,6 @@
 from typing import Union, Tuple, List, Dict, Any
 import numpy as np
 import pandas as pd
-import copy
-import networkx as nx
-import scipy.spatial.distance
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
@@ -46,6 +43,13 @@ def get_rewiring_sample(m0: np.ndarray, n_rewiring_attempts: int):
 def find_local_peaks(sample: List[np.ndarray], initial_belief: np.ndarray, correct_belief: float, niter_degroot: int, vision: int) -> List[Dict[str, Any]]:
     peaks = Parallel(n_jobs=-1)(delayed(_hill_climb)(m=s, initial_belief=initial_belief, correct_belief=correct_belief, niter_degroot=niter_degroot, vision=vision) for s in tqdm(sample))
     return peaks
+
+
+def extract_local_peaks(peaks: List[Dict[str, Any]]) -> List[np.ndarray]:
+    unique_peaks = np.unique([p['m'].flatten() for p in peaks], axis=0)
+    shape = peaks[0]['m'].shape
+    unique_peaks = [p.reshape(shape[0], shape[1]) for p in unique_peaks]
+    return unique_peaks
 
 
 def extract_local_peak_stats(peaks: List[Dict[str, Any]]) -> pd.DataFrame:
