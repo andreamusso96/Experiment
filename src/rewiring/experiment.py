@@ -14,7 +14,7 @@ p_watts_strogatz = 0.3
 correct_belief = 0.9
 niter_degroot = 2
 n_samples_rewiring = 1000
-n_samples_initial_belief = 100
+n_samples_initial_belief = 20
 
 
 def run(dims: int, path_save: str):
