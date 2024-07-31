@@ -6,7 +6,7 @@ import pandas as pd
 import h5py
 import json
 
-from degroot import find_local_peaks, get_rewiring_sample, extract_local_peaks
+from degroot import find_local_peaks, get_rewiring_sample, extract_local_peaks, degroot_err
 
 # Fixed parameters
 k_watts_strogatz = 4
@@ -25,9 +25,12 @@ def run(dims: int, path_save: str):
     peaks = []
     for i, init_belief in enumerate(initial_beliefs):
         peaks_ = find_local_peaks(sample=rewiring_sample, initial_belief=init_belief, correct_belief=correct_belief, niter_degroot=niter_degroot, vision=1)
-        peaks_ = extract_local_peaks(peaks_)
-        peaks_ = [{j: p.tolist()} for j, p in enumerate(peaks_)]
-        peaks.append({i: peaks_})
+        unique_peaks = extract_local_peaks(peaks_)
+
+        for p in unique_peaks:
+            err, b = degroot_err(m=p, initial_belief=init_belief, correct_belief=correct_belief, niter=niter_degroot)
+            estimate = np.mean(b)
+            peaks.append({'experiment': int(i), 'error': float(err), 'estimate': float(estimate), 'm': p.tolist()})
 
     json.dump(peaks, open(path_save, 'w'))
 
