@@ -6,7 +6,7 @@ def launch_jobs(cluster):
     vision = [1]
 
     if cluster:
-        path_save = '/cluster_path/experiment_{dims}_{vision}.csv'
+        path_save = '/cluster/work/coss/anmusso/experiment/rewiring_dim_vision/experiment_{dims}_{vision}.csv'
     else:
         path_save = '/Users/andrea/Desktop/PhD/Projects/Current/Experiment/src/rewiring/experiment_attempts/experiment_{dims}_{vision}.csv'
 
